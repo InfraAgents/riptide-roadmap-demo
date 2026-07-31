@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scientific Mode Wireframe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+    }
+
+    .screen {
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .screen h3 {
+      background: #2c3e50;
+      color: white;
+      padding: 12px;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .screen-content {
+      padding: 20px;
+    }
+
+    /* Calculator mockup */
+    .calculator-mock {
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    .mock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 12px;
+    }
+
+    .mode-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .angle-badge {
+      background: #e74c3c;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .display-mock {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    .display-expr {
+      font-size: 12px;
+      opacity: 0.7;
+      min-height: 16px;
+    }
+
+    .display-main {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .keypad-mock {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 15px;
+    }
+
+    .key-mock {
+      background: #ecf0f1;
+      border: 1px solid #bdc3c7;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .key-mock:hover {
+      background: #d5dbdb;
+    }
+
+    .key-mock.operator {
+      background: #3498db;
+      color: white;
+      border-color: #2980b9;
+    }
+
+    .key-mock.operator:hover {
+      background: #2980b9;
+    }
+
+    .key-mock.function {
+      background: #27ae60;
+      color: white;
+      border-color: #229954;
+    }
+
+    .key-mock.function:hover {
+      background: #229954;
+    }
+
+    .keypad-label {
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 10px;
+      margin-bottom: 8px;
+      color: #7f8c8d;
+    }
+
+    .scientific-keys {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .annotation {
+      font-size: 12px;
+      color: #555;
+      margin-top: 15px;
+      padding: 10px;
+      background: #fff9e6;
+      border-left: 3px solid #f39c12;
+    }
+
+    /* Section layout */
+    .explanation {
+      background: #f0f8ff;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .explanation h4 {
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+
+    .explanation p {
+      margin: 6px 0;
+    }
+
+    .highlight {
+      background: #fffacd;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-family: monospace;
+    }
+
+    /* Transitions callout */
+    .transitions {
+      margin-top: 30px;
+      padding: 20px;
+      background: #ecf0f1;
+      border-radius: 6px;
+    }
+
+    .transitions h3 {
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .transition-item {
+      margin: 10px 0;
+      font-size: 13px;
+    }
+
+    .transition-item strong {
+      color: #2c3e50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧮 Scientific Mode Wireframe</h1>
+
+    <div class="layout">
+      <!-- Basic Mode -->
+      <div class="screen">
+        <h3>Basic Mode (Default)</h3>
+        <div class="screen-content">
+          <div class="calculator-mock">
+            <div class="mock-header">
+              <span style="flex: 1;">Calculator</span>
+              <button class="mode-btn">Sci</button>
+            </div>
+
+            <div class="display-mock">
+              <div class="display-expr"></div>
+              <div class="display-main">0</div>
+            </div>
+
+            <div class="keypad-mock">
+              <div class="key-mock">AC</div>
+              <div class="key-mock">⌫</div>
+              <div class="key-mock">%</div>
+              <div class="key-mock operator">÷</div>
+
+              <div class="key-mock">7</div>
+              <div class="key-mock">8</div>
+              <div class="key-mock">9</div>
+              <div class="key-mock operator">×</div>
+
+              <div class="key-mock">4</div>
+              <div class="key-mock">5</div>
+              <div class="key-mock">6</div>
+              <div class="key-mock operator">−</div>
+
+              <div class="key-mock">1</div>
+              <div class="key-mock">2</div>
+              <div class="key-mock">3</div>
+              <div class="key-mock operator">+</div>
+
+              <div class="key-mock">±</div>
+              <div class="key-mock">0</div>
+              <div class="key-mock">.</div>
+              <div class="key-mock operator">=</div>
+            </div>
+
+            <div class="annotation">
+              ✓ Existing keypad layout unchanged.<br>
+              ✓ "Sci" button toggles to scientific mode.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scientific Mode -->
+      <div class="screen">
+        <h3>Scientific Mode (Toggled)</h3>
+        <div class="screen-content">
+          <div class="calculator-mock">
+            <div class="mock-header">
+              <span style="flex: 1;">Calculator</span>
+              <button class="mode-btn" style="background: #e74c3c;">Basic</button>
+              <span class="angle-badge">DEG</span>
+            </div>
+
+            <div class="display-mock">
+              <div class="display-expr">sin(</div>
+              <div class="display-main">0</div>
+            </div>
+
+            <div class="keypad-mock">
+              <div class="key-mock">AC</div>
+              <div class="key-mock">⌫</div>
+              <div class="key-mock">%</div>
+              <div class="key-mock operator">÷</div>
+
+              <div class="key-mock">7</div>
+              <div class="key-mock">8</div>
+              <div class="key-mock">9</div>
+              <div class="key-mock operator">×</div>
+
+              <div class="key-mock">4</div>
+              <div class="key-mock">5</div>
+              <div class="key-mock">6</div>
+              <div class="key-mock operator">−</div>
+
+              <div class="key-mock">1</div>
+              <div class="key-mock">2</div>
+              <div class="key-mock">3</div>
+              <div class="key-mock operator">+</div>
+
+              <div class="key-mock">±</div>
+              <div class="key-mock">0</div>
+              <div class="key-mock">.</div>
+              <div class="key-mock operator">=</div>
+            </div>
+
+            <div class="keypad-label">Scientific Functions</div>
+            <div class="scientific-keys">
+              <div class="key-mock function">sin</div>
+              <div class="key-mock function">cos</div>
+              <div class="key-mock function">tan</div>
+              <div class="key-mock function">log</div>
+              <div class="key-mock function">ln</div>
+              <div class="key-mock function">√</div>
+              <div class="key-mock function">^</div>
+              <div class="key-mock function">(</div>
+              <div class="key-mock function">)</div>
+            </div>
+
+            <div class="keypad-label">Constants</div>
+            <div class="scientific-keys" style="grid-template-columns: repeat(2, 1fr);">
+              <div class="key-mock function">π</div>
+              <div class="key-mock function">e</div>
+            </div>
+
+            <button class="mode-btn" style="width: 100%; margin-top: 12px; background: #e74c3c;">
+              Toggle: Degrees ↔ Radians
+            </button>
+
+            <div class="annotation">
+              ✓ Basic keypad still present, unmodified.<br>
+              ✓ Scientific functions (green) are added below.<br>
+              ✓ Constants π and e for quick access.<br>
+              ✓ Angle mode toggle and indicator (DEG/RAD).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key interactions -->
+    <div class="transitions">
+      <h3>Key Interactions & States</h3>
+
+      <div class="transition-item">
+        <strong>Precedence & Parentheses:</strong><br>
+        User enters <span class="highlight">2 + 3 × 4</span> → Display shows <span class="highlight">14</span> (not 20).<br>
+        User enters <span class="highlight">(2 + 3) × 4</span> → Display shows <span class="highlight">20</span>.
+      </div>
+
+      <div class="transition-item">
+        <strong>Trigonometry:</strong><br>
+        In DEG mode: <span class="highlight">sin(90)</span> → <span class="highlight">1</span>.<br>
+        In RAD mode: <span class="highlight">sin(π/2)</span> → <span class="highlight">1</span>.
+      </div>
+
+      <div class="transition-item">
+        <strong>Functions & Nesting:</strong><br>
+        User clicks <span class="highlight">sin</span> button → <span class="highlight">sin(</span> is inserted.<br>
+        User can continue typing: <span class="highlight">sin(π/2)</span> → <span class="highlight">1</span>.
+      </div>
+
+      <div class="transition-item">
+        <strong>Error Handling:</strong><br>
+        Mismatched parentheses or syntax errors show <span class="highlight">Error</span> in display.<br>
+        User can backspace or clear to recover.
+      </div>
+
+      <div class="transition-item">
+        <strong>Backward Compatibility:</strong><br>
+        Basic keypad works identically in both modes.<br>
+        All existing tests pass without modification.
+      </div>
+    </div>
+
+    <!-- Responsive note -->
+    <div class="explanation">
+      <h4>Responsive Behavior</h4>
+      <p>
+        <strong>Desktop:</strong> Basic and scientific keypads may appear side-by-side or in a toggle view.
+      </p>
+      <p>
+        <strong>Mobile:</strong> Keypads stack vertically. Scientific mode expands the calculator without horizontal scroll.
+      </p>
+      <p>
+        <strong>Dark/Light Theme:</strong> All UI respects the system color-scheme preference, just like the current calculator.
+      </p>
+    </div>
+
+    <div class="explanation">
+      <h4>Entry Points for Users</h4>
+      <p>
+        <strong>Keyboard:</strong> Type numbers, operators, parentheses, and function names (e.g., <span class="highlight">sin(</span>). Press <span class="highlight">Enter</span> to evaluate.
+      </p>
+      <p>
+        <strong>Mouse/Touch:</strong> Click buttons to append characters, constants, or functions. Click <span class="highlight">=</span> to evaluate.
+      </p>
+      <p>
+        <strong>Mixed:</strong> Start with buttons, continue with keyboard, or vice versa. The expression buffer accumulates all input until <span class="highlight">AC</span> or <span class="highlight">=</span>.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
