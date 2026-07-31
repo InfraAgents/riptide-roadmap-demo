@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wireframe — Scientific mode</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --shell: #171a21;
+        --key: #232732;
+        --key-function: #323847;
+        --accent: #ff9f0a;
+        --text: #f5f7fa;
+        --text-dim: #8b93a7;
+        --radius: 16px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 32px 16px;
+        background: radial-gradient(circle at 50% 0%, #1b1f2a 0%, var(--bg) 60%);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      h1 { text-align: center; font-weight: 600; font-size: 1.4rem; }
+      p.lede { text-align: center; color: var(--text-dim); max-width: 640px; margin: 0 auto 32px; line-height: 1.6; }
+      .row { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+      .frame { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .caption { color: var(--text-dim); font-size: 0.85rem; max-width: 340px; text-align: center; line-height: 1.5; }
+      .calculator {
+        width: 340px;
+        background: var(--shell);
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+      }
+      .topbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+      .sci-toggle {
+        border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer;
+        font: inherit; font-size: 0.8rem; color: var(--text-dim); background: var(--key-function);
+      }
+      .sci-toggle.on { background: var(--accent); color: #1a1205; font-weight: 600; }
+      .display { padding: 16px 12px 20px; text-align: right; overflow: hidden; }
+      .display__expression { min-height: 1.25rem; color: var(--text-dim); font-size: 0.95rem; }
+      .display__current { display: block; font-weight: 300; font-size: 3rem; line-height: 1.1; word-break: break-all; }
+      .sci-panel { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 10px; }
+      .sci-panel.hidden { display: none; }
+      .skey {
+        border: 0; border-radius: 12px; aspect-ratio: 1 / 1; font: inherit; font-size: 0.95rem;
+        color: var(--accent); background: var(--key); cursor: pointer; display: grid; place-items: center;
+      }
+      .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+      .key {
+        border: 0; border-radius: var(--radius); aspect-ratio: 1 / 1; font: inherit; font-size: 1.4rem;
+        color: var(--text); background: var(--key); cursor: pointer;
+      }
+      .key.fn { background: var(--key-function); font-size: 1.1rem; }
+      .key.op { background: var(--key-function); color: var(--accent); font-size: 1.5rem; }
+      .key.eq { background: var(--accent); color: #1a1205; font-weight: 600; }
+      .anno { max-width: 720px; margin: 40px auto 0; color: var(--text-dim); line-height: 1.7; font-size: 0.9rem; }
+      .anno code { background: var(--key); border-radius: 5px; padding: 1px 6px; color: var(--text); }
+      .anno h2 { color: var(--text); font-size: 1rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Scientific mode — wireframe</h1>
+    <p class="lede">
+      A <strong>Sci</strong> toggle reveals scientific keys above the existing
+      keypad. Basic mode (left) is pixel-identical to today; scientific mode
+      (right) enters a full expression evaluated with real precedence and
+      parentheses.
+    </p>
+
+    <div class="row">
+      <!-- BASIC (default) -->
+      <div class="frame">
+        <div class="calculator">
+          <div class="topbar"><button class="sci-toggle">Sci</button></div>
+          <div class="display">
+            <div class="display__expression">12 +</div>
+            <div class="display__current">3</div>
+          </div>
+          <div class="keypad">
+            <button class="key fn">AC</button><button class="key fn">⌫</button>
+            <button class="key fn">%</button><button class="key op">÷</button>
+            <button class="key">7</button><button class="key">8</button>
+            <button class="key">9</button><button class="key op">×</button>
+            <button class="key">4</button><button class="key">5</button>
+            <button class="key">6</button><button class="key op">−</button>
+            <button class="key">1</button><button class="key">2</button>
+            <button class="key">3</button><button class="key op">+</button>
+            <button class="key">±</button><button class="key">0</button>
+            <button class="key">.</button><button class="key eq">=</button>
+          </div>
+        </div>
+        <p class="caption">
+          <strong>Default view.</strong> Toggle off — no crowding. Identical to
+          the current calculator.
+        </p>
+      </div>
+
+      <!-- SCIENTIFIC -->
+      <div class="frame">
+        <div class="calculator">
+          <div class="topbar"><button class="sci-toggle on">Sci</button></div>
+          <div class="display">
+            <div class="display__expression">sin(π ÷ 6)</div>
+            <div class="display__current">0.5</div>
+          </div>
+          <div class="sci-panel">
+            <button class="skey">sin</button><button class="skey">cos</button>
+            <button class="skey">tan</button><button class="skey">ln</button>
+            <button class="skey">log</button><button class="skey">√</button>
+            <button class="skey">^</button><button class="skey">(</button>
+            <button class="skey">)</button><button class="skey">π</button>
+            <button class="skey">e</button><button class="skey">%</button>
+          </div>
+          <div class="keypad">
+            <button class="key fn">AC</button><button class="key fn">⌫</button>
+            <button class="key fn">%</button><button class="key op">÷</button>
+            <button class="key">7</button><button class="key">8</button>
+            <button class="key">9</button><button class="key op">×</button>
+            <button class="key">4</button><button class="key">5</button>
+            <button class="key">6</button><button class="key op">−</button>
+            <button class="key">1</button><button class="key">2</button>
+            <button class="key">3</button><button class="key op">+</button>
+            <button class="key">±</button><button class="key">0</button>
+            <button class="key">.</button><button class="key eq">=</button>
+          </div>
+        </div>
+        <p class="caption">
+          <strong>Toggle on.</strong> Scientific keys append tokens to an
+          expression; <code>=</code> evaluates it with correct precedence.
+        </p>
+      </div>
+    </div>
+
+    <div class="anno">
+      <h2>How it behaves</h2>
+      <ul>
+        <li><strong>Expression entry:</strong> in Sci mode the display shows the
+          full expression being built (e.g. <code>sin(π ÷ 6)</code>); pressing
+          <code>=</code> replaces it with the formatted result.</li>
+        <li><strong>Precedence &amp; parentheses:</strong> <code>2 + 3 × 4 = 14</code>,
+          <code>(2 + 3) × 4 = 20</code>, <code>2 ^ 3 ^ 2 = 512</code>
+          (right-associative).</li>
+        <li><strong>Functions &amp; constants:</strong> sin / cos / tan (radians),
+          ln (natural), log (base 10), √, plus <code>π</code> and <code>e</code>.</li>
+        <li><strong>Errors recover:</strong> a malformed expression like
+          <code>(2 + 3</code> shows <code>Error</code>; the next keypress starts
+          fresh — same as today's divide-by-zero.</li>
+        <li><strong>Reusable foundation:</strong> the evaluator is a pure
+          <code>evaluate(expr, variables)</code> function, so the later graphing
+          slice binds <code>x</code> per point with no rework.</li>
+      </ul>
+      <p><em>Wireframe only — static mock, not the live calculator.</em></p>
+    </div>
+  </body>
+</html>
