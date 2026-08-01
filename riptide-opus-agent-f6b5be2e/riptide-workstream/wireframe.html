@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scientific mode — wireframe</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #10141c;
+        --panel: #1b2230;
+        --key: #273041;
+        --key-fn: #323d52;
+        --op: #f2932c;
+        --eq: #3b82f6;
+        --sci: #2b3a4d;
+        --text: #f4f7fb;
+        --muted: #8b98ad;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 15px/1.5 system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        justify-content: center;
+        padding: 40px 20px;
+      }
+      .col { max-width: 340px; }
+      .note {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 6px 0 18px;
+      }
+      .caption {
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .calculator {
+        width: 320px;
+        background: var(--panel);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+      }
+      .topbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 10px;
+      }
+      .toggle {
+        background: var(--sci);
+        color: var(--text);
+        border: 1px solid #3a4a60;
+        border-radius: 999px;
+        padding: 6px 14px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .toggle[aria-pressed="true"] {
+        background: var(--eq);
+        border-color: var(--eq);
+      }
+      .display {
+        background: #0c0f16;
+        border-radius: 14px;
+        padding: 14px 16px;
+        text-align: right;
+        margin-bottom: 14px;
+      }
+      .expr { color: var(--muted); min-height: 18px; font-size: 14px; }
+      .current { font-size: 34px; font-weight: 600; }
+      .current.error { color: #ff6b6b; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      .sci-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .key {
+        border: none;
+        border-radius: 12px;
+        padding: 14px 0;
+        font-size: 17px;
+        color: var(--text);
+        background: var(--key);
+        cursor: pointer;
+      }
+      .key.fn { background: var(--key-fn); }
+      .key.op { background: var(--op); color: #1a1205; font-weight: 700; }
+      .key.eq { background: var(--eq); }
+      .key.sci { background: var(--sci); font-size: 15px; }
+      .hidden-panel {
+        opacity: 0.35;
+        border: 1px dashed #3a4a60;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="col">
+      <div class="caption">Basic mode (default — unchanged)</div>
+      <p class="note">
+        Loads exactly as today. The only new element is the “Sci” toggle in the
+        top bar; the scientific panel is hidden.
+      </p>
+      <div class="calculator">
+        <div class="topbar">
+          <button class="toggle" aria-pressed="false">Sci ▸</button>
+        </div>
+        <div class="display">
+          <div class="expr">12 +</div>
+          <div class="current">12</div>
+        </div>
+        <div class="hidden-panel">scientific panel hidden while toggle is off</div>
+        <div class="grid" style="margin-top: 8px;">
+          <button class="key fn">AC</button>
+          <button class="key fn">⌫</button>
+          <button class="key fn">%</button>
+          <button class="key op">÷</button>
+          <button class="key">7</button>
+          <button class="key">8</button>
+          <button class="key">9</button>
+          <button class="key op">×</button>
+          <button class="key">4</button>
+          <button class="key">5</button>
+          <button class="key">6</button>
+          <button class="key op">−</button>
+          <button class="key">1</button>
+          <button class="key">2</button>
+          <button class="key">3</button>
+          <button class="key op">+</button>
+          <button class="key">±</button>
+          <button class="key">0</button>
+          <button class="key">.</button>
+          <button class="key eq">=</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="caption">Scientific mode (toggle on)</div>
+      <p class="note">
+        The toggle reveals a panel of scientific keys above the basic keypad.
+        Presses build a real expression on the display line; <code>=</code>
+        evaluates it with precedence and parentheses. Trig is in radians.
+      </p>
+      <div class="calculator">
+        <div class="topbar">
+          <button class="toggle" aria-pressed="true">Sci ▾</button>
+        </div>
+        <div class="display">
+          <div class="expr">sin(π ÷ 2)</div>
+          <div class="current">1</div>
+        </div>
+        <div class="sci-grid">
+          <button class="key sci">sin</button>
+          <button class="key sci">cos</button>
+          <button class="key sci">tan</button>
+          <button class="key sci">√</button>
+          <button class="key sci">ln</button>
+          <button class="key sci">log</button>
+          <button class="key sci">xʸ</button>
+          <button class="key sci">x²</button>
+          <button class="key sci">π</button>
+          <button class="key sci">e</button>
+          <button class="key sci">(</button>
+          <button class="key sci">)</button>
+        </div>
+        <div class="grid">
+          <button class="key fn">AC</button>
+          <button class="key fn">⌫</button>
+          <button class="key fn">%</button>
+          <button class="key op">÷</button>
+          <button class="key">7</button>
+          <button class="key">8</button>
+          <button class="key">9</button>
+          <button class="key op">×</button>
+          <button class="key">4</button>
+          <button class="key">5</button>
+          <button class="key">6</button>
+          <button class="key op">−</button>
+          <button class="key">1</button>
+          <button class="key">2</button>
+          <button class="key">3</button>
+          <button class="key op">+</button>
+          <button class="key">±</button>
+          <button class="key">0</button>
+          <button class="key">.</button>
+          <button class="key eq">=</button>
+        </div>
+      </div>
+      <p class="note" style="margin-top: 16px;">
+        Error example: entering <code>(2 + 3</code> and pressing <code>=</code>
+        shows a red, recoverable <strong>Error</strong> (unbalanced parens);
+        the next digit starts fresh — same behaviour as division by zero today.
+      </p>
+    </div>
+  </body>
+</html>
