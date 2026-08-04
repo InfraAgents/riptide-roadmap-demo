@@ -2,89 +2,104 @@
 
 ## Technical context
 
-- **Stack:** plain ES modules, no build step, no dependencies. Tests run with
-  `node --test`. `index.html` is served from the repo root by GitHub Pages.
-- **Current shape:** `src/calculator.js` is a pure left-to-right state machine
-  (immutable state objects, no DOM). `src/app.js` wires it to the DOM and
-  keyboard. `formatNumber` already handles precision, noise trimming, and
-  exponential display.
-- **Key constraint from the roadmap:** the expression engine must be reusable
-  by graphing later, so it lives in its own pure module with a single
-  `evaluate(expression)` entry point and no DOM dependency — exactly the
-  pattern `calculator.js` already follows.
+- Dependency-free ES modules, no build step; `index.html` at the repo root is
+  served as-is by GitHub Pages.
+- Tests run with `node --test` against pure modules that never touch the DOM.
+- The current engine (`src/calculator.js`) is a step-at-a-time left-to-right
+  state machine. Scientific mode needs a real parser, so we add a **new** pure
+  module rather than contorting the existing one, and keep the basic path
+  untouched.
 
-## Approach & key decisions
+## Approach
 
-1. **New pure module `src/expression.js`** — a small tokenizer + recursive
-   descent (Pratt-style) parser/evaluator. Chosen over the shunting-yard
-   algorithm because recursive descent reads clearly for the grammar we need
-   (precedence, right-associative `^`, unary minus, parenthesised functions)
-   and is easy to unit-test function-by-function. It throws an
-   `ExpressionError` for any malformed input; the caller maps that to the
-   existing recoverable `Error` state. **Rationale:** keeping the engine pure
-   and framework-free is what lets graphing reuse it and lets us test it under
-   Node, matching the project's existing testability story.
-
-2. **Grammar (radians, out of scope: implicit multiplication):**
-
-   ```
-   expr    := term (("+" | "-") term)*
-   term    := power (("×" | "÷") power)*
-   power   := unary ("^" power)?          # right-associative
-   unary   := "-" unary | primary
-   primary := number | constant | func "(" expr ")" | "(" expr ")"
-   func    := "sin" | "cos" | "tan" | "log" | "ln" | "√"
-   constant:= "π" | "e"
-   ```
-
-   The tokenizer recognises numbers (with decimals), the operator/paren symbols
-   used by the UI (`×`, `÷`, `−`/`-`, `+`, `^`, `(`, `)`), the function names,
-   and the constants. Unknown characters throw.
-
-3. **Extend `src/calculator.js` with an expression sub-state** rather than
-   rewriting the basic state machine. Basic mode keeps its existing functions
-   untouched (protecting SC-002/SC-005). Scientific input builds a token/string
-   buffer; a new `evaluateExpression(state)` calls `evaluate` and folds the
-   result (or `Error`) back into the shared state shape (`current`, `error`,
-   `overwrite`). `formatNumber` is reused for the result.
-
-4. **UI: a toggle + a scientific panel in `index.html`.** The scientific keys
-   (`sin cos tan`, `log ln √`, `x²`, `xʸ` (`^`), `π`, `e`, `(`, `)`) sit in a
-   panel that is hidden by default and revealed by a toggle button with
-   `aria-pressed`. `src/app.js` gains handlers that append the relevant token
-   to the expression buffer and route `=` through `evaluateExpression`. When
-   the toggle is off, the app behaves exactly as today.
-
-5. **Styling in `styles.css`** for the toggle and the scientific panel,
-   following the existing `.key` / `.keypad` conventions and the dark/light
-   colour scheme. No new colours invented beyond the existing palette.
+1. **New pure expression engine** (`src/expression.js`) — tokenizer +
+   recursive-descent parser producing a number. This is the reusable
+   foundation the roadmap asks for. It is DOM-free and fully unit-tested. It
+   accepts a small options object (`{ degrees }`) so the DEG/RAD toggle can be
+   threaded through, and later graphing can bind `x`.
+2. **Scientific state in the calculator module** — add functions to
+   `src/calculator.js` that build an expression string from key presses and an
+   `evaluateExpression(state, options)` that calls the engine and formats the
+   result with the existing `formatNumber`. Scientific state lives alongside the
+   existing basic state, keyed by a `mode` flag, so basic behaviour is
+   unchanged when scientific mode is off.
+3. **UI wiring** — add a scientific toggle and a hidden scientific key panel to
+   `index.html`, style it in `styles.css`, and extend `src/app.js` to dispatch
+   the new actions and keyboard bindings.
 
 ## File-by-file changes
 
-| Path | Change |
-| --- | --- |
-| `src/expression.js` | **New.** Pure tokenizer + recursive-descent evaluator. Exports `evaluate(expression)` and `ExpressionError`. No DOM. |
-| `test/expression.test.js` | **New.** Unit tests: precedence, associativity, parentheses, unary minus, every function/constant, and error cases (empty, trailing operator, unbalanced parens, `√(−1)`, `log(0)`). |
-| `src/calculator.js` | **Edit.** Add scientific expression sub-state helpers (append token, backspace within expression, `evaluateExpression`) that reuse `formatNumber` and the existing `errorState`. Basic-mode exports unchanged. |
-| `src/app.js` | **Edit.** Add the mode toggle, scientific key handlers, keyboard bindings for `(`, `)`, `^`, and route `=` to the expression evaluator when in scientific mode. |
-| `index.html` | **Edit.** Add the scientific-mode toggle button and the (hidden-by-default) scientific key panel; basic keypad markup unchanged. |
-| `styles.css` | **Edit.** Style the toggle and scientific panel using existing conventions. |
-| `README.md` | **Edit.** Document scientific mode, the radians convention, and note graphing remains future work. |
+### New: `src/expression.js`
+- `evaluate(input, options = {})` — parse and evaluate; returns a number.
+  Throws `ExpressionError` for malformed input.
+- Internal `tokenize(input)` — numbers, operators, parentheses, function
+  names, constants; normalises `*`→`×`, `/`→`÷`, `pi`→`π`, `sqrt`→`√`.
+- Internal recursive-descent parser: `parseExpression` (`+ -`),
+  `parseTerm` (`× ÷`), `parseFactor` (unary minus, `^` right-assoc),
+  `parseAtom` (number, constant, parenthesised group, function call).
+- `FUNCTIONS` map (`sin`, `cos`, `tan`, `ln`, `log`, `√`) and `CONSTANTS`
+  (`π`, `e`); trig honours `options.degrees`.
+- Non-finite results throw `ExpressionError`.
+
+### New: `test/expression.test.js`
+- Precedence, associativity, parentheses, functions, constants, DEG/RAD,
+  and every error edge case from spec.md.
+
+### Changed: `src/calculator.js`
+- Add scientific-input helpers that append tokens to an `expression` string in
+  state and an `evaluateExpression` that runs the engine and formats via
+  `formatNumber`. Keep all existing exports and behaviour intact.
+- Add `expressionInput`, `evaluateExpression`, `toggleAngleMode` (or similar)
+  and extend `initialState` with `mode: "basic"`, `expression: ""`,
+  `degrees: false` **without** breaking `deepEqual` on the basic reset test —
+  the existing `clear` test compares to `initialState`, so new fields are added
+  to `initialState` itself so equality still holds.
+
+### Changed: `test/calculator.test.js`
+- Add scientific-mode state-machine tests (building an expression, evaluating,
+  backspace, clear). Existing tests are **not** modified.
+
+### Changed: `index.html`
+- Add a "Sci" toggle button and a `.keypad--scientific` panel (hidden by
+  default) with keys: `(`, `)`, `sin`, `cos`, `tan`, `ln`, `log`, `√`, `^`,
+  `π`, `e`, and a `DEG/RAD` toggle. Uses the same `data-action`/`data-value`
+  convention as existing keys.
+
+### Changed: `src/app.js`
+- Handle the new actions (`toggle-scientific`, `function`, `constant`, `paren`,
+  `power`, `toggle-angle`) and route input to scientific state when the mode is
+  on. Add keyboard bindings for `(`, `)`, `^` and typed constants.
+
+### Changed: `styles.css`
+- Style the scientific panel and toggle; hidden state; responsive grid that
+  does not disturb the basic keypad layout.
+
+### Changed: `README.md`
+- Document scientific mode, the expression engine module, and DEG/RAD in the
+  feature list and layout table.
+
+## Key decisions
+
+- **Recursive-descent parser, no `eval`.** Predictable, testable, safe, and
+  small enough to stay dependency-free. `eval`/`Function` are rejected for
+  security and because they don't give us controlled error handling or the
+  DEG/RAD hook graphing will need.
+- **Separate engine module.** Keeping `evaluate` DOM-free and standalone is
+  exactly what makes graphing able to reuse it (`evaluate(expr, { x })`
+  later), and mirrors the repo's existing "pure logic in a module" convention.
+- **New fields go into `initialState`.** The existing `clear` test does
+  `deepEqual(state, initialState)`; adding the scientific fields to
+  `initialState` itself keeps that test green while giving scientific mode the
+  state it needs.
+- **Radians default with a DEG toggle.** Matches JS `Math` semantics as the
+  base, with an opt-in DEG mode that most casual users expect — documented and
+  tested both ways.
+- **No implicit multiplication.** Keeps the tokenizer and parser simple and the
+  behaviour unambiguous; documented as a non-goal.
 
 ## Testing strategy
 
-- New `test/expression.test.js` drives `evaluate` directly (pure, fast).
-- Existing `test/calculator.test.js` must pass unchanged (regression guard).
-- Any calculator-level scientific helpers get focused tests in
-  `test/calculator.test.js` or a companion file, mirroring the existing style
-  (`press`-style sequences where practical).
-- Manual check against `riptide-workstream/wireframe.html` for layout/toggle.
-
-## Risks & mitigations
-
-- **Risk:** rewriting the state machine could regress basic mode. **Mitigation:**
-  additive changes only; keep existing exports and tests intact.
-- **Risk:** parser scope creep. **Mitigation:** the grammar above is fixed;
-  implicit multiplication and degrees mode are explicit non-goals.
-- **Risk:** `tan(π/2)` returns a huge finite number. **Mitigation:** documented
-  as a known limitation; it flows through existing exponential formatting.
+- `test/expression.test.js` covers the engine exhaustively (values + errors).
+- New cases in `test/calculator.test.js` cover the scientific state path.
+- All existing tests must remain green (`npm test`), proving no basic-mode
+  regression.
