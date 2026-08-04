@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scientific mode — wireframe</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #14161c;
+        --shell: #1e222b;
+        --key: #2b3140;
+        --key-fn: #384154;
+        --op: #4c6ef5;
+        --eq: #2f9e44;
+        --sci: #7048e8;
+        --text: #eef1f6;
+        --muted: #9aa4b8;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 15px/1.5 system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 28px 16px 60px;
+      }
+      h1 { font-size: 20px; text-align: center; }
+      .lead { text-align: center; color: var(--muted); max-width: 640px; margin: 0 auto 28px; }
+      .stage { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+      .frame { width: 320px; }
+      .caption { text-align: center; color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+      .calculator {
+        background: var(--shell);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 12px 40px rgba(0,0,0,.4);
+      }
+      .display {
+        background: #0d0f14;
+        border-radius: 12px;
+        padding: 14px 16px;
+        text-align: right;
+        margin-bottom: 12px;
+        min-height: 78px;
+      }
+      .display__expression { color: var(--muted); font-size: 14px; min-height: 20px; }
+      .display__current { font-size: 34px; font-weight: 600; }
+      .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+      .badge {
+        font-size: 12px; border: 1px solid var(--key-fn); border-radius: 999px;
+        padding: 3px 10px; color: var(--muted);
+      }
+      .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .keypad--sci { grid-template-columns: repeat(4, 1fr); margin-bottom: 8px; }
+      .key {
+        border: none; border-radius: 12px; padding: 14px 0; font-size: 18px;
+        background: var(--key); color: var(--text); cursor: pointer;
+      }
+      .key--fn { background: var(--key-fn); }
+      .key--op { background: var(--op); }
+      .key--eq { background: var(--eq); }
+      .key--sci { background: var(--sci); font-size: 15px; }
+      .toggle {
+        border: none; border-radius: 10px; padding: 7px 14px; font-size: 14px;
+        background: var(--sci); color: var(--text); cursor: pointer;
+      }
+      .toggle[aria-pressed="false"] { background: var(--key-fn); }
+      .hidden-note { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 12px; border: 1px dashed var(--key-fn); border-radius: 12px; }
+      .ann { max-width: 720px; margin: 40px auto 0; color: var(--muted); }
+      .ann li { margin: 6px 0; }
+      kbd { background:#0d0f14; border:1px solid var(--key-fn); border-radius:5px; padding:1px 6px; font-size:12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Scientific mode — wireframe</h1>
+    <p class="lead">
+      The scientific keys stay hidden behind a <strong>Sci</strong> toggle so
+      the basic keypad is never crowded. Opening it reveals functions,
+      constants, parentheses, power/root, and a DEG/RAD switch. The expression
+      line shows what will be evaluated.
+    </p>
+
+    <div class="stage">
+      <!-- Basic (default) -->
+      <div class="frame">
+        <div class="calculator">
+          <div class="toolbar">
+            <span class="badge">RAD</span>
+            <button class="toggle" aria-pressed="false">Sci</button>
+          </div>
+          <div class="display">
+            <div class="display__expression">12 +</div>
+            <div class="display__current">12</div>
+          </div>
+          <div class="keypad">
+            <button class="key key--fn">AC</button>
+            <button class="key key--fn">⌫</button>
+            <button class="key key--fn">%</button>
+            <button class="key key--op">÷</button>
+            <button class="key">7</button><button class="key">8</button><button class="key">9</button><button class="key key--op">×</button>
+            <button class="key">4</button><button class="key">5</button><button class="key">6</button><button class="key key--op">−</button>
+            <button class="key">1</button><button class="key">2</button><button class="key">3</button><button class="key key--op">+</button>
+            <button class="key">±</button><button class="key">0</button><button class="key">.</button><button class="key key--eq">=</button>
+          </div>
+        </div>
+        <p class="caption">Default view — identical to today. Sci is off.</p>
+      </div>
+
+      <!-- Scientific (expanded) -->
+      <div class="frame">
+        <div class="calculator">
+          <div class="toolbar">
+            <button class="toggle" aria-pressed="true">RAD / DEG</button>
+            <button class="toggle" aria-pressed="true">Sci ✓</button>
+          </div>
+          <div class="display">
+            <div class="display__expression">2 + sin(π / 6)</div>
+            <div class="display__current">2.5</div>
+          </div>
+          <div class="keypad keypad--sci">
+            <button class="key key--sci">sin</button>
+            <button class="key key--sci">cos</button>
+            <button class="key key--sci">tan</button>
+            <button class="key key--sci">^</button>
+            <button class="key key--sci">ln</button>
+            <button class="key key--sci">log</button>
+            <button class="key key--sci">√</button>
+            <button class="key key--sci">DEG</button>
+            <button class="key key--sci">(</button>
+            <button class="key key--sci">)</button>
+            <button class="key key--sci">π</button>
+            <button class="key key--sci">e</button>
+          </div>
+          <div class="keypad">
+            <button class="key key--fn">AC</button>
+            <button class="key key--fn">⌫</button>
+            <button class="key key--fn">%</button>
+            <button class="key key--op">÷</button>
+            <button class="key">7</button><button class="key">8</button><button class="key">9</button><button class="key key--op">×</button>
+            <button class="key">4</button><button class="key">5</button><button class="key">6</button><button class="key key--op">−</button>
+            <button class="key">1</button><button class="key">2</button><button class="key">3</button><button class="key key--op">+</button>
+            <button class="key">±</button><button class="key">0</button><button class="key">.</button><button class="key key--eq">=</button>
+          </div>
+        </div>
+        <p class="caption">Sci on — scientific panel + basic keypad together.</p>
+      </div>
+    </div>
+
+    <ul class="ann">
+      <li><strong>Sci toggle</strong> shows/hides the purple scientific panel; when off, the layout is byte-for-byte today's keypad (SC-004).</li>
+      <li><strong>Expression line</strong> (top of the display) shows the full expression being built, e.g. <em>2 + sin(π / 6)</em>; the big number shows the last result on <kbd>=</kbd>.</li>
+      <li><strong>DEG/RAD</strong> switches trig angle units; the badge reflects the current mode (FR-005).</li>
+      <li><strong>Precedence &amp; parentheses</strong> are handled by a new pure <code>src/expression.js</code> engine — the reusable foundation graphing will later consume.</li>
+      <li><strong>Errors</strong> (unbalanced parens, √ of a negative, ÷ by zero) show the existing recoverable <em>Error</em> state — no crashes.</li>
+    </ul>
+  </body>
+</html>
