@@ -1,152 +1,132 @@
-# Scientific Mode with Expression Precedence
+# Scientific Mode with Expression Evaluation
 
 ## Overview
-
-Add trigonometric, logarithmic, and power functions to the calculator alongside support for proper operator precedence and parentheses. This slice builds the expression parsing foundation that graphing can later reuse.
-
-The current calculator evaluates left-to-right (e.g., `2 + 3 × 4 = 20`). Scientific mode requires a proper precedence-respecting parser so that `2 + 3 × 4 = 14` (multiply before add). Once built, this parser enables both new scientific functions and future graphing.
+Add scientific calculator functions (trigonometry, logarithms, powers, constants) with a proper expression evaluator that respects operator precedence and parentheses. This lays the foundation for graphing, which will reuse the same parser.
 
 ## User Stories
 
-### US-001: Trigonometric Functions
-**As a** student or engineer  
-**When** I am calculating angles and triangles  
-**I want** quick access to sin, cos, tan, and their inverses (arcsin, arccos, arctan)  
-**So that** I don't need a separate app
+### US-001: Evaluate expressions with operator precedence
+As a student,
+I want to type `2 + 3 × 4` and get `14` (not `20`),
+So that complex calculations work correctly.
 
-**Acceptance Scenarios:**
-- `sin(90)` (in degrees) returns `1`
-- `cos(0)` returns `1`
-- `tan(45)` returns `1`
-- `arcsin(1)` returns `90` (in degrees)
-- All trig functions work on the current display value
-- Degrees/radians mode can be toggled via a UI button (initially degrees)
+**Acceptance:** Parser respects standard precedence (exponents > mult/div > add/sub).
 
-### US-002: Logarithmic Functions
-**As a** scientist  
-**When** I need to compute logarithms  
-**I want** `ln` (natural log), `log₁₀`, and exponential (`e^x`)  
-**So that** I can solve exponential and logarithmic equations
+### US-002: Group operations with parentheses
+As a student,
+I want to type `(2 + 3) × 4` and get `20`,
+So that I can override natural precedence.
 
-**Acceptance Scenarios:**
-- `ln(e)` returns `1`
-- `log₁₀(100)` returns `2`
-- `e^2` returns `≈7.389`
-- These are callable as single-argument functions on the current display value
+**Acceptance:** Parentheses are parsed and evaluated in the correct order.
 
-### US-003: Power and Root Functions
-**As a** mathematician  
-**When** calculating powers and roots  
-**I want** `x²`, `x³`, `√x`, `∛x`, and `x^y` operations  
-**So that** I don't have to type them manually
+### US-003: Use trigonometric functions
+As a physics student,
+I want to compute `sin(π/6)` and `cos(0)`,
+So that I can solve physics problems.
 
-**Acceptance Scenarios:**
-- `2²` returns `4`
-- `27^(1/3)` (cube root) returns `3`
-- `x^y` takes two operands: `2 ^ 3 =` returns `8`
-- Square root is a single-argument function applied to the display
+**Acceptance:** sin, cos, tan buttons work with radians; each returns correctly rounded results.
 
-### US-004: Mathematical Constants
-**As a** student  
-**When** I need π or e in a calculation  
-**I want** dedicated buttons or keyboard shortcuts for `π` and `e`  
-**So that** I don't have to remember their decimal expansions
+### US-004: Compute logarithms and exponentials
+As a scientist,
+I want to compute `ln(e)`, `log₁₀(100)`, and `2^10`,
+So that I can work with exponential growth and scientific notation.
 
-**Acceptance Scenarios:**
-- Pressing π inserts `π` into the expression
-- Pressing e inserts `e` into the expression
-- `π` displays as the symbol or approximation as needed
-- `sin(π/2)` evaluates correctly
+**Acceptance:** ln, log₁₀, and power (^) operators work correctly.
 
-### US-005: Parentheses and Proper Precedence
-**As a** anyone using the calculator  
-**When** I enter an expression like `2 + 3 × 4`  
-**I want** it to evaluate as `14` (not `20`), respecting standard order of operations  
-**So that** I get mathematically correct results
+### US-005: Access mathematical constants
+As a mathematician,
+I want quick access to `π` and `e`,
+So that I don't have to type them manually.
 
-**Acceptance Scenarios:**
-- `2 + 3 × 4 =` returns `14`
-- `(2 + 3) × 4 =` returns `20`
-- Nested parentheses work: `((1 + 2) × 3) + 4 = 13`
-- Unmatched parentheses show an error or prompt for closure
-- Backspace works inside parentheses
-- Expression display shows the full expression with parentheses
+**Acceptance:** π and e buttons insert their values; scientific mode display shows them as symbols (π, e).
 
-### US-006: Toggle Between Basic and Scientific Modes
-**As a** user  
-**When** I open the calculator  
-**I want** to see the basic 4-operation keypad by default, and have a button to reveal scientific functions  
-**So that** the interface isn't overwhelming for simple math
+### US-006: Switch between basic and scientific modes
+As a casual user,
+I want to toggle scientific mode on and off,
+So that the keypad doesn't overwhelm me with unfamiliar buttons.
 
-**Acceptance Scenarios:**
-- A "Scientific" button toggles to show additional keys (or a second keypad)
-- Basic operators still work in scientific mode
-- Toggling back hides scientific keys
-- State is preserved when switching modes (e.g., ongoing calculation isn't lost)
+**Acceptance:** 
+- One button (labeled "Scientific" or "≡") toggles the mode.
+- Basic mode shows the familiar 4-operation keypad.
+- Scientific mode reveals additional buttons (sin, cos, tan, ln, log, ^, √, π, e, parentheses).
+- Toggling mode clears the current input (AC) but preserves calculation history intent.
 
 ## Functional Requirements
 
-**FR-001:** Implement a proper expression parser that respects operator precedence (+/- lower, ×/÷ higher, ^/root higher still, functions highest) and parentheses.
+### FR-001: Expression Parser
+- Build a recursive descent parser that handles:
+  - Binary operators: `+`, `-`, `×`, `÷`, `^` (exponentiation)
+  - Unary functions: `sin`, `cos`, `tan`, `ln`, `log`, `√`
+  - Constants: `π`, `e`
+  - Parentheses for grouping
+  - Operator precedence: exponentiation > unary functions > multiplication/division > addition/subtraction
+- Parser consumes an input string and returns the numeric result or an error.
+- **No external parsing library** — implement from first principles using recursive descent.
 
-**FR-002:** Support single-argument functions: `sin`, `cos`, `tan`, `arcsin`, `arccos`, `arctan`, `ln`, `log₁₀`, `e^x`, `√`, `∛`, and `x²`, `x³`.
+### FR-002: UI Mode Toggle
+- Add a "Scientific" button to switch between two keypad layouts.
+- Basic mode: current 4-operation layout.
+- Scientific mode: current layout + scientific buttons (sin, cos, tan, ln, log, ^, √, π, e, left/right parenthesis).
+- Layout should not wrap or overflow on mobile.
 
-**FR-003:** Support binary operators: `+`, `-`, `×`, `÷`, `^` (power), and root (e.g., `x^(1/y)`).
+### FR-003: Button Integration
+- New buttons dispatch actions to the calculator state:
+  - Function buttons (sin, cos, etc.) insert the function name followed by `(`.
+  - Binary operator buttons (^) behave like `+`, `-`, etc.
+  - Constant buttons (π, e) insert the symbol.
+  - Parenthesis buttons insert `(` or `)`.
+- Keyboard bindings for common functions (e.g., `s` for sin, `l` for log, `^` for power).
 
-**FR-004:** Add constants `π` and `e` that are inserted as values into expressions.
+### FR-004: Display Expression During Entry
+- Show the full expression being entered (e.g., `sin(π/2)`) in the expression display area.
+- Allow user to press `=` to evaluate and show the result.
+- Allow backspace to remove one character at a time.
 
-**FR-005:** Track and display the full expression (not just pending operation) so users see what they're building.
-
-**FR-006:** Provide a UI toggle (button) to switch between basic and scientific keypads without loss of state.
-
-**FR-007:** Add a degrees/radians toggle button in scientific mode; all trig functions use the current mode.
-
-**FR-008:** Error handling: mismatched parentheses, division by zero, domain errors (e.g., `sqrt(-1)`) should display recoverable errors like the basic mode does.
+### FR-005: Angle Mode
+- Default to **radians** for trig functions.
+- Future enhancement: add a degrees toggle (not in this slice).
 
 ## Success Criteria
 
-**SC-001:** All user story acceptance scenarios pass.
+### SC-001: Parser correctness
+- Expressions with mixed operators and parentheses evaluate correctly.
+- Test suite verifies: `2 + 3 * 4 = 14`, `(2 + 3) * 4 = 20`, `sin(0) = 0`, `log(100) = 2`, `2^3 = 8`, `sqrt(16) = 4`.
 
-**SC-002:** Expression parser is a pure, testable module (no DOM access) following the existing architecture pattern.
+### SC-002: UI responsiveness
+- Toggling scientific mode is instant.
+- All buttons (basic and scientific) are clickable and styled consistently.
+- No layout shift or overflow when toggling mode.
 
-**SC-003:** All existing basic-mode tests pass (backward compatibility).
+### SC-003: Keyboard support
+- Digits, operators, and `=` work as before.
+- New actions bindable to keys: `s` → sin, `c` → cos, `t` → tan, `l` → log, `n` → ln, `^` → power, `(` / `)` → parentheses.
 
-**SC-004:** New scientific functions are covered by unit tests (at least 20 new test cases for parser, precedence, and functions).
+### SC-004: Error handling
+- Division by zero, invalid expressions, domain errors (e.g., `sqrt(-1)`) show "Error".
+- Recovery: pressing any digit after an error clears it and starts fresh.
 
-**SC-005:** Scientific mode can be toggled without losing the current calculation state.
+### SC-005: Mobile-friendly layout
+- Scientific buttons fit on screen without horizontal scroll on devices ≥ 360px wide.
+- Text on buttons is readable (small font acceptable, but not illegible).
 
-**SC-006:** Keyboard support: digits and operators work; scientific functions have keyboard shortcuts (e.g., `s` for sin, `l` for ln, `p` for π).
+## Edge Cases & Non-Goals
 
-**SC-007:** Responsive layout: scientific keypad reflows on small screens without overflow.
+### Edge Cases
+- Nested parentheses: `((2 + 3) * 4)` → 20.
+- Function nesting: `sin(cos(0))` → sin(1) ≈ 0.841.
+- Leading zeros and decimals: `.5` → 0.5.
+- Very small/large numbers from trig: `sin(π)` ≈ 0 (not 1e-16).
 
-**SC-008:** WCAG 2.1 AA accessibility: all buttons labeled, aria-live on display, logical tab order preserved.
-
-## Edge Cases
-
-- **Empty expressions:** Pressing `=` with an empty expression or unmatched parentheses
-- **Nested functions:** `sin(arcsin(0.5))` should return `0.5` (or close)
-- **Very large exponents:** `2^100` should handle correctly or show overflow error
-- **Division by zero in denominator of a fraction:** `1/(2-2)` should error
-- **Radix conversion:** Ensure that π and e are stored at high precision internally and only rounded for display
-- **Keyboard vs. button input:** Ensure both work consistently for all new operations
-- **State reset:** Clearing should reset mode toggles (degrees/radians, basic/scientific) to defaults
-
-## Non-Goals
-
-- Graphing (deferred to a future slice; foundation is built here)
-- Symbolic algebra or equation solving
-- History or calculation log
-- Custom functions or variables
-- Complex number support
-- Matrix operations
+### Non-Goals
+- **Degrees mode** — stay in radians; degrees can be a future toggle.
+- **Hyperbolic functions** (sinh, cosh, tanh) — keep to standard trig.
+- **Complex numbers** — real numbers only.
+- **History / undo** — not in scope.
+- **Variables or user-defined functions** — not in scope.
+- **Graphing** — that is a separate roadmap item.
 
 ## Roadmap Coverage
+This slice covers item **1. Scientific Mode** from the roadmap:
+> "Scientific mode — trigonometry, logarithms, powers and roots, π and e, and parentheses, without crowding the basic keypad."
 
-This slice covers the first roadmap item:
-
-> **Scientific mode** — trigonometry, logarithms, powers and roots, `π` and `e`, and parentheses, without crowding the basic keypad.
-
-It also builds the expression parser foundation required by the second roadmap item:
-
-> **Graphing** — plot `y = f(x)` and let people explore the curve. [Both] need to evaluate expressions with real precedence and parentheses, which the current left-to-right engine can't do. Whichever lands first should build that foundation so the other can reuse it.
-
-This slice delivers the foundation (the parser); graphing can reuse it in a future workstream.
+It also builds the **expression evaluator with precedence**, which the roadmap identifies as the foundation both scientific mode and graphing depend on.

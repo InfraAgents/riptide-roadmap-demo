@@ -1,161 +1,149 @@
-# Implementation Plan
+# Implementation Plan: Scientific Mode
 
 ## Technical Context
 
-The current calculator uses a simple left-to-right state machine in `src/calculator.js` with no expression parsing. To support scientific mode and proper precedence, we need:
+### Current Architecture
+- **calculator.js**: Pure state machine. No parsing — left-to-right evaluation only.
+- **app.js**: Event handlers dispatch actions; state updates; render.
+- **HTML**: Hardcoded buttons and layout. Two-line display (expression + current).
+- **Tests**: Simple sequence-based tests using a `press()` helper.
 
-1. **Expression Parser** — a recursive descent parser that tokenizes input, respects operator precedence (PEMDAS), handles parentheses, and evaluates expressions
-2. **Function Library** — trigonometric, logarithmic, power, and root functions with angle mode (degrees/radians) support
-3. **UI/UX Layer** — toggle between basic and scientific keypads, show full expression, handle new keyboard bindings
-4. **State Machine Update** — adapt the existing state machine to work with the new parser
+### Why a New Parser?
+The current left-to-right engine can't handle operator precedence or functions. Scientific mode requires:
+1. Parsing a full expression string into an AST (abstract syntax tree) or equivalent.
+2. Respecting operator precedence: `^` > unary funcs > `×/÷` > `+−`.
+3. Handling parentheses and function calls: `sin(π/2)`.
 
-The parser will be a pure module (no DOM), testable in Node, and reusable by future graphing code.
+### Parser Design
+Use a **recursive descent parser** (LL grammar, no external libs):
+- **Tokenizer**: break input into tokens (digits, operators, function names, parentheses).
+- **Parser**: recursive functions for each precedence level.
+  - `parseExpression()` — addition/subtraction (lowest precedence).
+  - `parseTerm()` — multiplication/division.
+  - `parseFactor()` — exponentiation.
+  - `parseUnary()` — unary functions and negation.
+  - `parsePrimary()` — numbers, constants, parenthesized expressions, function calls.
+- **Evaluator**: walk the tree and compute the result.
 
-## Architecture Decisions
+This keeps everything in pure functions, testable, and dependency-free.
 
-### Decision 1: Parser Design
-**Choice:** Recursive descent parser with tokenizer  
-**Rationale:**
-- Simple to understand and test
-- Naturally handles nested parentheses and operator precedence
-- Pure function (no side effects), testable in Node
-- Fast enough for calculator-sized expressions (< 100 tokens)
+### State Machine Changes
+- Keep the existing state structure mostly intact.
+- Add a `mode` field: `'basic' | 'scientific'`.
+- The `current` field now holds an expression string (not just a number in entry).
+- When `=` is pressed, parse and evaluate the expression; store the result.
 
-**Alternatives Considered:**
-- Shunting-yard algorithm: more complex, no clear advantage here
-- Abstract syntax tree (AST): overkill for simple evaluation, but we'll build a lightweight one anyway for clarity
-
-### Decision 2: Angle Mode
-**Choice:** Store mode (degrees/radians) in calculator state; trig functions read it  
-**Rationale:**
-- Degrees are more intuitive for users (especially students)
-- Easy to toggle and persist
-- Matches scientific calculator UX
-
-### Decision 3: UI Toggle
-**Choice:** A "Scientific" button that shows/hides a second set of keys  
-**Rationale:**
-- Doesn't crowd the basic keypad (roadmap requirement)
-- User can work in basic mode and toggle to scientific as needed
-- Preserves ongoing calculation state
-
-### Decision 4: Backward Compatibility
-**Choice:** Reuse the existing `calculator.js` state machine structure where possible; add new functions alongside  
-**Rationale:**
-- Existing tests pass unchanged
-- Familiar pattern for the codebase
-- Easier review and integration
+### UI Changes
+- Add a "Scientific" toggle button (top-right or bottom of display area).
+- Two keypad layouts in CSS (toggle visibility via `.mode-scientific`).
+- All new buttons inserted inline (not a separate panel).
 
 ## File Structure
 
-### Modified Files
-- **`src/calculator.js`** — extend with new parser and functions; keep existing basic operations working
-  - Add `parseExpression(input)` function (the main parser entry point)
-  - Add `evaluateExpression(tokens)` (recursive descent evaluation)
-  - Add trig functions: `sin`, `cos`, `tan`, `asin`, `acos`, `atan`
-  - Add log functions: `ln`, `log10`, `exp`
-  - Add power functions: `pow`, `sqrt`, `cbrt`
-  - Add state field: `angleMode` (default: "degrees")
-  - Update `setOperator` and other functions to work with the new parser when needed
-  - Keep all existing exports for backward compatibility
+### Files to Add
+```
+src/parser.js
+  - tokenize(input: string) → Token[]
+  - parse(input: string) → number
+  - (exports parse as the public API)
 
-- **`src/app.js`** — extend with scientific mode UI
-  - Add toggle button click handler
-  - Show/hide scientific keypad
-  - Handle new keyboard bindings (e.g., 's' for sin)
-  - Update display to show full expression
-  - Add degrees/radians toggle button and handler
+riptide-workstream/
+  - spec.md (this file's parent)
+  - plan.md (this)
+  - tasks.md (task breakdown)
+  - wireframe.html (UI mockup)
+```
 
-- **`index.html`** — add scientific keypad markup
-  - Scientific buttons (sin, cos, tan, arcsin, etc.)
-  - π and e constant buttons
-  - Power and root buttons
-  - Parenthesis buttons
-  - Degrees/radians toggle button
-  - Scientific toggle button
+### Files to Modify
+```
+src/calculator.js
+  - Add initialState.mode = 'basic'
+  - Add inputFunction(state, funcName) → inserts function with open paren
+  - Add inputConstant(state, constant) → inserts π or e symbol
+  - Add inputParenthesis(state, paren) → inserts ( or )
+  - Modify equals() to call parse(state.current) instead of direct eval
+  - Modify clear(), etc. to preserve/reset mode as appropriate
+  - Add formatNumber improvements for very small trig results (sin(π) → 0)
 
-- **`styles.css`** — style scientific keypad
-  - Hidden/shown states for keypad
-  - Layout for scientific buttons (may wrap or use a modal)
-  - Styling for new button types (function, constant, etc.)
+src/app.js
+  - Add mode toggle button and click handler
+  - Update dispatch() to handle new actions
+  - Update render() to show/hide scientific buttons and apply mode class
+  - Add keyboard bindings for scientific functions
 
-- **`test/calculator.test.js`** — extend with new test cases
-  - Parser tokenization tests
-  - Precedence tests (e.g., `2 + 3 * 4 = 14`)
-  - Parentheses tests
-  - Trig function tests (degrees and radians modes)
-  - Log function tests
-  - Power and root tests
-  - Edge case tests (mismatched parens, domain errors, etc.)
-  - Backward compatibility tests (ensure old tests still pass)
+index.html
+  - Add mode toggle button
+  - Add scientific buttons (all initially hidden, shown with .mode-scientific)
+  - Update keypad layout to grid that accommodates all buttons
 
-## Implementation Phases
+styles.css
+  - Add styles for scientific buttons
+  - Add .mode-scientific class to toggle visibility
+  - Ensure grid layout doesn't overflow on 360px+ devices
+```
 
-### Phase 1: Expression Parser (Tokenizer + Recursive Descent)
-- Tokenize input string into numbers, operators, functions, constants, and parentheses
-- Implement recursive descent parser with precedence levels:
-  - Level 0 (lowest): `+`, `-` (addition/subtraction)
-  - Level 1: `×`, `÷` (multiplication/division)
-  - Level 2: `^` (exponentiation, right-associative)
-  - Level 3 (highest): unary functions and parentheses
-- Return an evaluable result or throw/return error
+## Key Decisions & Rationale
 
-### Phase 2: Function Library
-- Implement trig functions (with angle mode support)
-- Implement log functions
-- Implement power and root functions
-- Add constants π and e
+### 1. Recursive Descent Parser
+**Why not eval()?** Dangerous, slow, and not in the spirit of dependency-free.
+**Why not an expression tree library?** No external dependencies.
+**Why recursive descent?** Elegant, easy to test, explicit precedence, and can extend for future features (variables, user functions).
 
-### Phase 3: State Machine & UI Integration
-- Add `angleMode` to calculator state
-- Update state machine to toggle between basic and scientific modes
-- Add keyboard shortcuts for scientific functions
-- Update `app.js` to handle new actions (toggle mode, toggle angle mode, input function names)
+### 2. Radians Only
+**Why radians?** Standard in mathematics and physics. Easier to implement without UI clutter (degrees toggle can be added later).
 
-### Phase 4: UI & Styling
-- Add scientific keypad HTML (initially hidden)
-- Add toggle button
-- Add degrees/radians indicator and toggle
-- Style to match existing design
-- Ensure responsive layout
+### 3. Tokenizer + Parser Separation
+**Why separate?** Cleaner code, easier to test tokenization independently, easier to extend (e.g., add variables later by enhancing the tokenizer).
 
-### Phase 5: Testing & Polish
-- Write comprehensive tests for parser and functions
-- Verify backward compatibility
-- Test edge cases and error handling
-- Accessibility audit
+### 4. Mode Toggle Clears Input
+**Rationale:** Switching modes is a deliberate user action; it's safer UX to clear the input buffer to avoid confusion (e.g., user types `2+3`, toggles to scientific, types `sin` expecting `2+3sin(?)` but getting `sin(?)`).
 
-## Key Design Patterns
+### 5. Symbols in Display (π, e, not "pi", "e")
+**Why?** Cleaner, more professional. The parser's tokenizer knows that `π` is `Math.PI`.
 
-**Parser Output:** Functions return either `{ success: true, value: number }` or `{ success: false, error: string }` to mirror the existing error handling.
+### 6. No Separate Function Panel
+**Why integrated?** Keeps the design simple, no modal or tab switching, easier on mobile.
 
-**Function Signature:** All scientific functions accept a single number (the current display value) and return a number or error. Binary operators use the existing pattern (left operand stored in state, right operand entered, then applied).
+## Parser Implementation Sketch
 
-**Tokens:** Represented as objects: `{ type: 'number' | 'operator' | 'function' | 'constant' | 'paren', value: ... }`
+```javascript
+// Tokenize: "2 + 3 * sin(π/2)" → 
+//   [NUM(2), OP(+), NUM(3), OP(*), FUNC(sin), LPAREN, CONST(π), OP(/), NUM(2), RPAREN]
 
-**Expression String:** User builds up an expression string (e.g., `"sin(π/2) + 3"`) that is parsed on `=` or operator precedence breaks.
+// Parse recursively:
+// parseExpression() handles +/- (lowest precedence, left-associative)
+//   parseTerm() handles */, (next level)
+//     parseFactor() handles ^, (right-associative)
+//       parseUnary() handles unary - and functions
+//         parsePrimary() handles numbers, constants, (expr), and function calls
+
+// Evaluate by traversing the tree.
+```
 
 ## Testing Strategy
 
-1. **Unit tests for tokenizer** — ensure input strings are split correctly
-2. **Unit tests for parser** — precedence, parentheses, error cases
-3. **Unit tests for functions** — each function with known inputs and outputs
-4. **Integration tests** — full expressions from UI to result
-5. **Regression tests** — all existing basic-mode tests pass unchanged
+### Unit Tests (src/parser.test.js — new file)
+- Tokenization: valid and invalid input.
+- Parsing: operator precedence, parentheses, functions, constants.
+- Evaluation: results match expected values (with floating-point tolerance).
 
-## Risks & Mitigations
+### Integration Tests (test/calculator.test.js — extend)
+- New actions: `inputFunction`, `inputConstant`, `inputParenthesis`.
+- Scientific expressions via the `press()` helper (expand it to handle new tokens).
+- Mode toggling doesn't break basic operations.
 
-| Risk | Mitigation |
-|------|-----------|
-| Parser bugs cause wrong results | Comprehensive unit tests; start with simple cases (no functions) and build up |
-| Parentheses mismatched; unclear error message | Provide clear error messages; highlight mismatched parens in the expression display |
-| Keyboard shortcuts conflict with browser defaults | Test common shortcuts; document any that can't be used; provide UI alternatives |
-| Performance degrades with long expressions | Parser is single-pass; should be fast enough; test with pathologically long inputs (> 1000 chars) |
-| Backward compatibility breaks | Run all existing tests; add a regression test suite |
+### Manual Testing (QA)
+- Try expressions in browser.
+- Check mobile layout.
+- Verify keyboard shortcuts.
 
-## Open Questions Resolved
+## Deployment
+- No changes to CI/CD (hands off .github/).
+- No build step required (parser is plain ES modules).
+- GitHub Pages serves updated index.html as-is.
 
-- **Angle mode default?** Degrees (more intuitive for students)
-- **Where to store angle mode?** In calculator state, toggled via button
-- **How to show scientific buttons?** Hidden by default; toggle button reveals them (or modal)
-- **Keyboard shortcuts for functions?** Use mnemonics where possible (e.g., `s` for sin, `l` for ln, `p` for π)
+## Rollback Plan
+If the parser proves buggy:
+1. The mode toggle defaults to 'basic'.
+2. Basic mode uses the original left-to-right calculator, unchanged.
+3. Revert src/parser.js and roll back src/calculator.js and src/app.js to revert scientific-specific logic only.
